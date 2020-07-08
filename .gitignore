@@ -1,0 +1,4 @@
+InternalFlow/runLbm
+*.o
+ExternalFlow/generalExternalFlow_custom
+*.stl
