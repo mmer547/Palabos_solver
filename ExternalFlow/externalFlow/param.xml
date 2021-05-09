@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<input>
+  <lx>29.5</lx>
+  <ly>9.0</ly>
+  <lz>9.0</lz>
+  <xSide>2.0</xSide>
+  <ySide>1.0</ySide>
+  <resolution>25</resolution>
+  <dt>0.00082</dt>
+  <maxIter>500000</maxIter>
+  <statIter>200</statIter>
+  <outIter>500</outIter>
+  <startIter>24000</startIter>
+  <inletVelocity>1.0</inletVelocity>
+  <Re>50.0</Re>
+  <mountPoint0>4.5</mountPoint0>
+  <mountPoint1>4.5</mountPoint1>
+  <mountPoint2>4.5</mountPoint2>
+  <ibIter>4</ibIter>
+  <periodicBoundaries>true</periodicBoundaries>
+  <freq>0.1</freq>
+  <model>mesh.stl</model>
+</input>

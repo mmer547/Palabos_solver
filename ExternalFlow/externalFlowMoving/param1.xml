@@ -8,16 +8,16 @@
 <geometry>
     <!-- Coordinates of the physical simulation domain. -->
     <simulationDomain>
-        <x> -0.650 2.500 </x>
-        <y> -0.455 0.445 </y>
-        <z> -0.455 0.445 </z>
+        <x> -0.3 0.3 </x>
+        <y> -0.8 0.2 </y>
+        <z> -0.3 0.3 </z>
     </simulationDomain>
     <!-- Files with the moving immersed surface geometries. -->
-    <!-- <movingSurfaceFileNames> cube.stl </movingSurfaceFileNames> -->
+    <movingSurfaceFileNames> propeller.stl </movingSurfaceFileNames>
     <!-- Files with the static immersed surface geometries. -->
-    <staticSurfaceFileNames> ToyCar3.stl </staticSurfaceFileNames>
+    <!--<staticSurfaceFileNames> sphere.stl </staticSurfaceFileNames>-->
     <!-- Direction of the flow (0-> positive x, 1-> positive y, 2-> positive z). -->
-    <flowDirection> 0 </flowDirection>
+    <flowDirection> 1 </flowDirection>
 </geometry>
 
 <numerics>
@@ -43,7 +43,7 @@
     <!-- Total number of lattice nodes in the characteristic length. -->
     <resolution> 16 </resolution>
     <!-- Discrete time step. -->
-    <dt> 0.001067 </dt>
+    <dt> 0.00001 </dt>
     <!-- Maximum number of iterations. -->
     <maxIter> 200000 </maxIter>
     <!-- Iterations for the immersed boundary method. -->
@@ -53,18 +53,18 @@
     <!-- Smagorinsky LES model parameter. -->
     <cSmago> 0.14 </cSmago>
     <!-- Inlet velocity. -->
-    <inletVelocity> 0.1 0.0 0.0 </inletVelocity>
+    <inletVelocity> 0.0 5.0 0.0 </inletVelocity>
     <!-- Use periodic lateral boundaries or free-slip ones? -->
     <lateralPeriodic> true </lateralPeriodic>
     <!-- Angular velocities for the moving surfaces (represented as column vectors). -->
     <angularVelocities>
         <x> 0.000 </x>
-        <y> 0.125 </y>
+        <y> 0.000 </y>
         <z> 0.000 </z>
     </angularVelocities>
     <!-- Point on the axis of rotation for each moving surface (represented as column vectors). -->
     <rotationAxisPoints>
-        <x> -0.15 </x>
+        <x>  0.00 </x>
         <y>  0.00 </y>
         <z>  0.00 </z>
     </rotationAxisPoints>
@@ -76,7 +76,7 @@
          to that axis, which holds the minimum axis coordinate. If no sponge
          zone is necessary at a lattice boundary, the corresponding width
          should be 0.0. -->
-        <xWidths> 0.0 0.5 </xWidths>
+        <xWidths> 0.0 0.0 </xWidths>
         <yWidths> 0.0 0.0 </yWidths>
         <zWidths> 0.0 0.0 </zWidths>
         <!-- Use sponges of "viscosity" or "Smagorinsky" type? -->
@@ -89,7 +89,7 @@
          If 0, then a constant pressure is imposed at the outlet.
          If 1, then FluidPressureOutlet3D is used.
          If 2, then VirtualOutlet is used. -->
-    <outflowBcType> 2 </outflowBcType>
+    <outflowBcType> 0 </outflowBcType>
     <!-- File for signaling program abortion. -->
     <abortFileName> abort </abortFileName>
     <!-- XML file name for restarting. -->
@@ -104,7 +104,7 @@
     <!-- Fluid density. -->
     <rho> 1.0 </rho>
     <!-- Fluid kinematic viscosity. -->
-    <nu> 2.5e-5 </nu>
+    <nu> 1.0e-6 </nu>
     <!-- Absolute pressure at infinity. -->
     <ambientPressure> 0.0 </ambientPressure>
 </fluid>
@@ -113,7 +113,7 @@
     <!-- Number of iterations for terminal output. -->
     <statIter> 100 </statIter>
     <!-- Number of iterations for disk output. -->
-    <outIter> 200 </outIter>
+    <outIter> 100 </outIter>
     <!-- Number of iterations for checkpointing. Zero or negative means no checkpoints. -->
     <cpIter> -1 </cpIter>
     <!-- Number of iterations for checking for user-driven program abortion. -->
@@ -124,7 +124,7 @@
          and their number must be the same as the number of moving surfaces. -->
     <torques>
         <axisPoints>
-            <x> -0.15 </x>
+            <x>  0.00 </x>
             <y>  0.00 </y>
             <z>  0.00 </z>
         </axisPoints>
@@ -138,9 +138,9 @@
     <outputInDomain> false </outputInDomain>
     <!-- Domain for disk output (must be a subset of the simulation domain). -->
     <outputDomain>
-        <x> -0.650 2.500 </x>
-        <y> -0.455 0.445 </y>
-        <z> -0.455 0.445 </z>
+        <x> -0.3 0.3 </x>
+        <y> -0.8 0.2 </y>
+        <z> -0.3 0.3 </z>
     </outputDomain>
     <!-- Save data on disk on a set of slices or not? -->
     <outputOnSlices> true </outputOnSlices>
@@ -148,21 +148,21 @@
     <outputSlices>
         <!-- Slices normal to the x-axis for disk output. -->
         <xSlices>
-            <xPositions> 0.0 0.05 0.1 0.15 0.2 0.5 1.0 1.5 2.0 </xPositions>
-            <yRange> -0.455 0.445 </yRange>
-            <zRange> -0.455 0.445 </zRange>
+            <xPositions> 0.0 </xPositions>
+            <yRange> -0.8 0.2 </yRange>
+            <zRange> -0.3 0.3 </zRange>
         </xSlices>
         <!-- Slices normal to the y-axis for disk output. -->
         <ySlices>
-            <yPositions> -0.4 -0.2 -0.1 0.0 0.1 0.2 0.4 </yPositions>
-            <zRange> -0.455 0.445 </zRange>
-            <xRange> -0.650 2.500 </xRange>
+            <yPositions> -0.8 -0.6 -0.4 -0.2 0.0 0.2 </yPositions>
+            <zRange> -0.3 0.3 </zRange>
+            <xRange> -0.3 0.3 </xRange>
         </ySlices>
         <!-- Slices normal to the z-axis for disk output. -->
         <zSlices>
-            <zPositions> -0.4 -0.2 -0.1 0.0 0.1 0.2 0.4 </zPositions>
-            <xRange> -0.650 2.500 </xRange>
-            <yRange> -0.455 0.445 </yRange>
+            <zPositions> 0.0 </zPositions>
+            <xRange> -0.3 0.3 </xRange>
+            <yRange> -0.8 0.2 </yRange>
         </zSlices>
     </outputSlices>
 </output>

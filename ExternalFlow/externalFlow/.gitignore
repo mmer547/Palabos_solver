@@ -1,0 +1,10 @@
+*.vti
+*.ppm
+*.vtk
+*.exe
+*.ilk
+*.pdb
+*.tgz
+/figs
+*.pvsm
+/tmp*

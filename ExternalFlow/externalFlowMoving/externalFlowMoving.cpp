@@ -1,13 +1,21 @@
-
 /* This file is part of the Palabos library.
  *
- * Copyright (C) 2011-2017 FlowKit Sarl
- * Route d'Oron 2
- * 1010 Lausanne, Switzerland
- * E-mail contact: contact@flowkit.com
+ * The Palabos softare is developed since 2011 by FlowKit-Numeca Group Sarl
+ * (Switzerland) and the University of Geneva (Switzerland), which jointly
+ * own the IP rights for most of the code base. Since October 2019, the
+ * Palabos project is maintained by the University of Geneva and accepts
+ * source code contributions from the community.
+ * 
+ * Contact:
+ * Jonas Latt
+ * Computer Science Department
+ * University of Geneva
+ * 7 Route de Drize
+ * 1227 Carouge, Switzerland
+ * jonas.latt@unige.ch
  *
  * The most recent release of Palabos can be downloaded at 
- * <http://www.palabos.org/>
+ * <https://palabos.unige.ch/>
  *
  * The library Palabos is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License as
@@ -89,10 +97,10 @@ struct SimulationParameters {
     std::vector<T> yDomain;                         // Extent in the y-direction of the physical simulation domain.
     std::vector<T> zDomain;                         // Extent in the z-direction of the physical simulation domain.
 
-    // std::vector<std::string> movingSurfaceFileNames;    // Files with the moving immersed surface geometries.
-    std::vector<std::string> staticSurfaceFileNames;    // Files with the static immersed surface geometries.
-    // plint numMovingSurfaces;                            // Number of moving immersed surfaces.
-    plint numStaticSurfaces;                            // Number of static immersed surfaces.
+    std::vector<std::string> movingSurfaceFileNames;    // Files with the moving immersed surface geometries.
+    //std::vector<std::string> staticSurfaceFileNames;    // Files with the static immersed surface geometries.
+    plint numMovingSurfaces;                            // Number of moving immersed surfaces.
+    //plint numStaticSurfaces;                            // Number of static immersed surfaces.
     plint numSurfaces;                                  // Number of all immersed surfaces.
     bool refineSurfaceMeshes;                           // Immersed surfaces are represented as triangle surface meshes.
                                                         // Because of the immersed boundary method used, the size of
@@ -133,8 +141,8 @@ struct SimulationParameters {
     T ambientPressure;                              // Absolute stagnation pressure in physical units.
     T cSmago;                                       // Smagorinsky parameter.
     Array<T,3> inletVelocity;                       // Inlet velocity vector in physical units.
-    // std::vector<Array<T,3> > angularVelocities;     // Angular velocity vectors for all moving surfaces in physical units.
-    // std::vector<Array<T,3> > rotationAxisPoints;    // Points on the rotation axis of every moving surface in physical units.
+    std::vector<Array<T,3> > angularVelocities;     // Angular velocity vectors for all moving surfaces in physical units.
+    std::vector<Array<T,3> > rotationAxisPoints;    // Points on the rotation axis of every moving surface in physical units.
 
     bool lateralPeriodic;                           // Use periodic lateral boundaries, or free-slip ones?
     int outflowBcType;                              // Type of the outflow boundary condition.
@@ -151,8 +159,8 @@ struct SimulationParameters {
 
     Precision precision;                            // Precision for geometric operations.
 
-    // std::vector<Array<T,3> > torqueAxisPoints;      // Axes with respect to which the torques on moving objects is computed.
-    // std::vector<Array<T,3> > torqueAxisDirections;
+    std::vector<Array<T,3> > torqueAxisPoints;      // Axes with respect to which the torques on moving objects is computed.
+    std::vector<Array<T,3> > torqueAxisDirections;
 
     bool outputInDomain;                            // Save data on disk in a volume domain or not?
     Cuboid<T> outputCuboid;                         // Volume domain for disk output.
@@ -178,7 +186,7 @@ struct SimulationParameters {
     T ambientPressure_LB;
     Array<T,3> inletVelocity_LB;
     std::vector<Array<T,3> > angularVelocities_LB;
-    // std::vector<Array<T,3> > rotationAxisPoints_LB;
+    std::vector<Array<T,3> > rotationAxisPoints_LB;
     std::vector<Array<T,3> > rotationAxisUnitVectors;
     std::vector<plint> startIds;
     std::vector<Array<T,3> > vertices;
@@ -198,7 +206,7 @@ struct SimulationParameters {
     plint fileNamePadding;
     bool incompressibleModel;
 
-    // std::vector<Array<T,3> > torqueAxisPoints_LB;
+    std::vector<Array<T,3> > torqueAxisPoints_LB;
 
     Box3D outputDomain;                             // Domains for disk output.
     std::vector<Box3D> xSlices;
@@ -238,12 +246,12 @@ void readUserDefinedSimulationParameters(std::string xmlInputFileName, Simulatio
     PLB_ASSERT(param.yDomain.size() == 2 && param.yDomain[1] > param.yDomain[0]);
     document["geometry"]["simulationDomain"]["z"].read(param.zDomain);
     PLB_ASSERT(param.zDomain.size() == 2 && param.zDomain[1] > param.zDomain[0]);
-    // document["geometry"]["movingSurfaceFileNames"].read(param.movingSurfaceFileNames);
-    // param.numMovingSurfaces = param.movingSurfaceFileNames.size();
-    document["geometry"]["staticSurfaceFileNames"].read(param.staticSurfaceFileNames);
-    param.numStaticSurfaces = param.staticSurfaceFileNames.size();
-    // param.numSurfaces = param.numStaticSurfaces + param.numMovingSurfaces;
-    param.numSurfaces = param.numStaticSurfaces; // add 20191218
+    document["geometry"]["movingSurfaceFileNames"].read(param.movingSurfaceFileNames);
+    param.numMovingSurfaces = param.movingSurfaceFileNames.size();
+    //document["geometry"]["staticSurfaceFileNames"].read(param.staticSurfaceFileNames);
+    //param.numStaticSurfaces = param.staticSurfaceFileNames.size();
+    //param.numSurfaces = param.numStaticSurfaces + param.numMovingSurfaces;
+    param.numSurfaces = param.numMovingSurfaces;
     PLB_ASSERT(param.numSurfaces > 0);
     document["geometry"]["flowDirection"].read(param.flowDirection);
     PLB_ASSERT(param.flowDirection == 0 || param.flowDirection == 1 || param.flowDirection == 2);
@@ -288,29 +296,29 @@ void readUserDefinedSimulationParameters(std::string xmlInputFileName, Simulatio
         document["numerics"]["angularVelocities"]["y"].read(y);
         document["numerics"]["angularVelocities"]["z"].read(z);
         PLB_ASSERT(x.size() == y.size() && y.size() == z.size());
-        // PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
-        // plint sz = x.size();
-        // param.angularVelocities.resize(sz);
-        // for (plint iSurface = 0; iSurface < sz; iSurface++) {
-        //     param.angularVelocities[iSurface][0] = x[iSurface];
-        //     param.angularVelocities[iSurface][1] = y[iSurface];
-        //     param.angularVelocities[iSurface][2] = z[iSurface];
-        // }
+        PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
+        plint sz = x.size();
+        param.angularVelocities.resize(sz);
+        for (plint iSurface = 0; iSurface < sz; iSurface++) {
+            param.angularVelocities[iSurface][0] = x[iSurface];
+            param.angularVelocities[iSurface][1] = y[iSurface];
+            param.angularVelocities[iSurface][2] = z[iSurface];
+        }
     }
     {
         std::vector<T> x, y, z;
-        // document["numerics"]["rotationAxisPoints"]["x"].read(x);
-        // document["numerics"]["rotationAxisPoints"]["y"].read(y);
-        // document["numerics"]["rotationAxisPoints"]["z"].read(z);
+        document["numerics"]["rotationAxisPoints"]["x"].read(x);
+        document["numerics"]["rotationAxisPoints"]["y"].read(y);
+        document["numerics"]["rotationAxisPoints"]["z"].read(z);
         PLB_ASSERT(x.size() == y.size() && y.size() == z.size());
-        // PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
-        // plint sz = x.size();
-        // param.rotationAxisPoints.resize(sz);
-        // for (plint iSurface = 0; iSurface < sz; iSurface++) {
-        //     param.rotationAxisPoints[iSurface][0] = x[iSurface];
-        //     param.rotationAxisPoints[iSurface][1] = y[iSurface];
-        //     param.rotationAxisPoints[iSurface][2] = z[iSurface];
-        // }
+        PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
+        plint sz = x.size();
+        param.rotationAxisPoints.resize(sz);
+        for (plint iSurface = 0; iSurface < sz; iSurface++) {
+            param.rotationAxisPoints[iSurface][0] = x[iSurface];
+            param.rotationAxisPoints[iSurface][1] = y[iSurface];
+            param.rotationAxisPoints[iSurface][2] = z[iSurface];
+        }
     }
 
     std::vector<T> sWidths;
@@ -359,14 +367,14 @@ void readUserDefinedSimulationParameters(std::string xmlInputFileName, Simulatio
         document["output"]["torques"]["axisPoints"]["y"].read(y);
         document["output"]["torques"]["axisPoints"]["z"].read(z);
         PLB_ASSERT(x.size() == y.size() && y.size() == z.size());
-        // PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
-        // plint sz = x.size();
-        // param.torqueAxisPoints.resize(sz);
-        // for (plint iSurface = 0; iSurface < sz; iSurface++) {
-        //     param.torqueAxisPoints[iSurface][0] = x[iSurface];
-        //     param.torqueAxisPoints[iSurface][1] = y[iSurface];
-        //     param.torqueAxisPoints[iSurface][2] = z[iSurface];
-        // }
+        PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
+        plint sz = x.size();
+        param.torqueAxisPoints.resize(sz);
+        for (plint iSurface = 0; iSurface < sz; iSurface++) {
+            param.torqueAxisPoints[iSurface][0] = x[iSurface];
+            param.torqueAxisPoints[iSurface][1] = y[iSurface];
+            param.torqueAxisPoints[iSurface][2] = z[iSurface];
+        }
     }
     {
         std::vector<T> x, y, z;
@@ -374,18 +382,18 @@ void readUserDefinedSimulationParameters(std::string xmlInputFileName, Simulatio
         document["output"]["torques"]["axisDirections"]["y"].read(y);
         document["output"]["torques"]["axisDirections"]["z"].read(z);
         PLB_ASSERT(x.size() == y.size() && y.size() == z.size());
-        // PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
-        // plint sz = x.size();
-        // param.torqueAxisDirections.resize(sz);
-        // for (plint iSurface = 0; iSurface < sz; iSurface++) {
-        //     param.torqueAxisDirections[iSurface][0] = x[iSurface];
-        //     param.torqueAxisDirections[iSurface][1] = y[iSurface];
-        //     param.torqueAxisDirections[iSurface][2] = z[iSurface];
+        PLB_ASSERT(x.size() == param.movingSurfaceFileNames.size());
+        plint sz = x.size();
+        param.torqueAxisDirections.resize(sz);
+        for (plint iSurface = 0; iSurface < sz; iSurface++) {
+            param.torqueAxisDirections[iSurface][0] = x[iSurface];
+            param.torqueAxisDirections[iSurface][1] = y[iSurface];
+            param.torqueAxisDirections[iSurface][2] = z[iSurface];
 
-        //     T axisNorm = norm(param.torqueAxisDirections[iSurface]);
-        //     PLB_ASSERT(!util::isZero(axisNorm));
-        //     param.torqueAxisDirections[iSurface] /= axisNorm;
-        // }
+            T axisNorm = norm(param.torqueAxisDirections[iSurface]);
+            PLB_ASSERT(!util::isZero(axisNorm));
+            param.torqueAxisDirections[iSurface] /= axisNorm;
+        }
     }
 
     document["output"]["outputInDomain"].read(param.outputInDomain);
@@ -573,23 +581,23 @@ void calculateDerivedSimulationParameters(SimulationParameters& param)
     param.ambientPressure_LB = (1.0/param.rho) * (param.dt*param.dt/(param.dx*param.dx)) * param.ambientPressure;
     param.inletVelocity_LB = param.inletVelocity * (param.dt / param.dx);
 
-    // param.angularVelocities_LB.resize(param.angularVelocities.size());
-    // for (plint iSurface = 0; iSurface < (plint) param.angularVelocities_LB.size(); iSurface++) {
-    //     param.angularVelocities_LB[iSurface] = param.angularVelocities[iSurface] * param.dt;
-    // }
-    // param.rotationAxisPoints_LB.resize(param.rotationAxisPoints.size());
-    // for (plint iSurface = 0; iSurface < (plint) param.rotationAxisPoints_LB.size(); iSurface++) {
-    //     param.rotationAxisPoints_LB[iSurface] = toLB(param.rotationAxisPoints[iSurface], param.dx, param.physicalLocation);
-    // }
-    // param.rotationAxisUnitVectors.resize(param.angularVelocities.size());
-    // for (plint iSurface = 0; iSurface < (plint) param.rotationAxisUnitVectors.size(); iSurface++) {
-    //     T angVelNorm = norm(param.angularVelocities[iSurface]);
-    //     if (util::isZero(angVelNorm)) {
-    //         param.rotationAxisUnitVectors[iSurface] = Array<T,3>((T) 1, (T) 0, (T) 0);
-    //     } else {
-    //         param.rotationAxisUnitVectors[iSurface] = param.angularVelocities[iSurface] / angVelNorm;
-    //     }
-    // }
+    param.angularVelocities_LB.resize(param.angularVelocities.size());
+    for (plint iSurface = 0; iSurface < (plint) param.angularVelocities_LB.size(); iSurface++) {
+        param.angularVelocities_LB[iSurface] = param.angularVelocities[iSurface] * param.dt;
+    }
+    param.rotationAxisPoints_LB.resize(param.rotationAxisPoints.size());
+    for (plint iSurface = 0; iSurface < (plint) param.rotationAxisPoints_LB.size(); iSurface++) {
+        param.rotationAxisPoints_LB[iSurface] = toLB(param.rotationAxisPoints[iSurface], param.dx, param.physicalLocation);
+    }
+    param.rotationAxisUnitVectors.resize(param.angularVelocities.size());
+    for (plint iSurface = 0; iSurface < (plint) param.rotationAxisUnitVectors.size(); iSurface++) {
+        T angVelNorm = norm(param.angularVelocities[iSurface]);
+        if (util::isZero(angVelNorm)) {
+            param.rotationAxisUnitVectors[iSurface] = Array<T,3>((T) 1, (T) 0, (T) 0);
+        } else {
+            param.rotationAxisUnitVectors[iSurface] = param.angularVelocities[iSurface] / angVelNorm;
+        }
+    }
 
     if (param.refineSurfaceMeshes) {
         if (param.targetMaxEdgeLength < 0.0) {
@@ -604,10 +612,10 @@ void calculateDerivedSimulationParameters(SimulationParameters& param)
     T nu_LB = param.nu * param.dt / (param.dx * param.dx);
     param.omega = 1.0 / (DESCRIPTOR<T>::invCs2 * nu_LB + 0.5);
 
-    // param.torqueAxisPoints_LB.resize(param.torqueAxisPoints.size());
-    // for (plint iSurface = 0; iSurface < (plint) param.torqueAxisPoints_LB.size(); iSurface++) {
-    //     param.torqueAxisPoints_LB[iSurface] = toLB(param.torqueAxisPoints[iSurface], param.dx, param.physicalLocation);
-    // }
+    param.torqueAxisPoints_LB.resize(param.torqueAxisPoints.size());
+    for (plint iSurface = 0; iSurface < (plint) param.torqueAxisPoints_LB.size(); iSurface++) {
+        param.torqueAxisPoints_LB[iSurface] = toLB(param.torqueAxisPoints[iSurface], param.dx, param.physicalLocation);
+    }
 
     computeOutputDomain(param);
     computeOutputSlices(param);
@@ -620,12 +628,12 @@ void printSimulationParameters(SimulationParameters const& param)
     pcout << "yDomain = [" << param.yDomain[0] << ", " << param.yDomain[1] << "]" << std::endl;
     pcout << "zDomain = [" << param.zDomain[0] << ", " << param.zDomain[1] << "]" << std::endl;
 
-    // for (plint i = 0; i < (plint) param.movingSurfaceFileNames.size(); i++) {
-    //     pcout << "movingSurfaceFileNames[" << i << "] = " << param.movingSurfaceFileNames[i] << std::endl;
-    // }
-    for (plint i = 0; i < (plint) param.staticSurfaceFileNames.size(); i++) {
-        pcout << "staticSurfaceFileNames[" << i << "] = " << param.staticSurfaceFileNames[i] << std::endl;
+    for (plint i = 0; i < (plint) param.movingSurfaceFileNames.size(); i++) {
+        pcout << "movingSurfaceFileNames[" << i << "] = " << param.movingSurfaceFileNames[i] << std::endl;
     }
+    //for (plint i = 0; i < (plint) param.staticSurfaceFileNames.size(); i++) {
+        //pcout << "staticSurfaceFileNames[" << i << "] = " << param.staticSurfaceFileNames[i] << std::endl;
+    //}
     pcout << "refineSurfaceMeshes = " << (param.refineSurfaceMeshes ? "true" : "false") << std::endl;
     if (param.refineSurfaceMeshes) {
         pcout << "targetMaxEdgeLength = " << param.targetMaxEdgeLength << std::endl;
@@ -652,16 +660,16 @@ void printSimulationParameters(SimulationParameters const& param)
                                  << param.inletVelocity[1] << ", "
                                  << param.inletVelocity[2] << "]" << std::endl;
     pcout << "lateralPeriodic = " << (param.lateralPeriodic ? "true" : "false") << std::endl;
-    // for (plint iSurface = 0; iSurface < (plint) param.angularVelocities.size(); iSurface++) {
-    //     pcout << "angularVelocities[" << iSurface << "] = [" << param.angularVelocities[iSurface][0] << ", "
-    //                                                          << param.angularVelocities[iSurface][1] << ", "
-    //                                                          << param.angularVelocities[iSurface][2] << "]" << std::endl;
-    // }
-    // for (plint iSurface = 0; iSurface < (plint) param.rotationAxisPoints.size(); iSurface++) {
-    //     pcout << "rotationAxisPoints[" << iSurface << "] = [" << param.rotationAxisPoints[iSurface][0] << ", "
-    //                                                           << param.rotationAxisPoints[iSurface][1] << ", "
-    //                                                           << param.rotationAxisPoints[iSurface][2] << "]" << std::endl;
-    // }
+    for (plint iSurface = 0; iSurface < (plint) param.angularVelocities.size(); iSurface++) {
+        pcout << "angularVelocities[" << iSurface << "] = [" << param.angularVelocities[iSurface][0] << ", "
+                                                             << param.angularVelocities[iSurface][1] << ", "
+                                                             << param.angularVelocities[iSurface][2] << "]" << std::endl;
+    }
+    for (plint iSurface = 0; iSurface < (plint) param.rotationAxisPoints.size(); iSurface++) {
+        pcout << "rotationAxisPoints[" << iSurface << "] = [" << param.rotationAxisPoints[iSurface][0] << ", "
+                                                              << param.rotationAxisPoints[iSurface][1] << ", "
+                                                              << param.rotationAxisPoints[iSurface][2] << "]" << std::endl;
+    }
     pcout << "outflowBcType = " << param.outflowBcType << std::endl;
 
     for (int iSponge = 0; iSponge < 6; iSponge++) {
@@ -671,16 +679,16 @@ void printSimulationParameters(SimulationParameters const& param)
     if (param.useSmagorinskySponges) {
         pcout << "targetCSmago = " << param.targetCSmago << std::endl;
     }
-    // for (plint iSurface = 0; iSurface < (plint) param.torqueAxisPoints.size(); iSurface++) {
-    //     pcout << "torqueAxisPoints[" << iSurface << "] = [" << param.torqueAxisPoints[iSurface][0] << ", "
-    //                                                         << param.torqueAxisPoints[iSurface][1] << ", "
-    //                                                         << param.torqueAxisPoints[iSurface][2] << "]" << std::endl;
-    // }
-    // for (plint iSurface = 0; iSurface < (plint) param.torqueAxisDirections.size(); iSurface++) {
-    //     pcout << "torqueAxisDirections[" << iSurface << "] = [" << param.torqueAxisDirections[iSurface][0] << ", "
-    //                                                             << param.torqueAxisDirections[iSurface][1] << ", "
-    //                                                             << param.torqueAxisDirections[iSurface][2] << "]" << std::endl;
-    // }
+    for (plint iSurface = 0; iSurface < (plint) param.torqueAxisPoints.size(); iSurface++) {
+        pcout << "torqueAxisPoints[" << iSurface << "] = [" << param.torqueAxisPoints[iSurface][0] << ", "
+                                                            << param.torqueAxisPoints[iSurface][1] << ", "
+                                                            << param.torqueAxisPoints[iSurface][2] << "]" << std::endl;
+    }
+    for (plint iSurface = 0; iSurface < (plint) param.torqueAxisDirections.size(); iSurface++) {
+        pcout << "torqueAxisDirections[" << iSurface << "] = [" << param.torqueAxisDirections[iSurface][0] << ", "
+                                                                << param.torqueAxisDirections[iSurface][1] << ", "
+                                                                << param.torqueAxisDirections[iSurface][2] << "]" << std::endl;
+    }
 
     pcout << "useParallelIO = " << (param.useParallelIO ? "true" : "false") << std::endl;
     pcout << "precision = " << (param.precision == FLT ? "FLT" :
@@ -698,24 +706,24 @@ void printSimulationParameters(SimulationParameters const& param)
     pcout << "inletVelocity_LB = [" << param.inletVelocity_LB[0] << ", "
                                     << param.inletVelocity_LB[1] << ", "
                                     << param.inletVelocity_LB[2] << "]" << std::endl;
-    // for (plint iSurface = 0; iSurface < (plint) param.angularVelocities_LB.size(); iSurface++) {
-    //     pcout << "angularVelocities_LB[" << iSurface << "] = [" << param.angularVelocities_LB[iSurface][0] << ", "
-    //                                                             << param.angularVelocities_LB[iSurface][1] << ", "
-    //                                                             << param.angularVelocities_LB[iSurface][2] << "]" << std::endl;
-    // }
-    // for (plint iSurface = 0; iSurface < (plint) param.rotationAxisPoints_LB.size(); iSurface++) {
-    //     pcout << "rotationAxisPoints_LB[" << iSurface << "] = [" << param.rotationAxisPoints_LB[iSurface][0] << ", "
-    //                                                              << param.rotationAxisPoints_LB[iSurface][1] << ", "
-    //                                                              << param.rotationAxisPoints_LB[iSurface][2] << "]" << std::endl;
-    // }
+    for (plint iSurface = 0; iSurface < (plint) param.angularVelocities_LB.size(); iSurface++) {
+        pcout << "angularVelocities_LB[" << iSurface << "] = [" << param.angularVelocities_LB[iSurface][0] << ", "
+                                                                << param.angularVelocities_LB[iSurface][1] << ", "
+                                                                << param.angularVelocities_LB[iSurface][2] << "]" << std::endl;
+    }
+    for (plint iSurface = 0; iSurface < (plint) param.rotationAxisPoints_LB.size(); iSurface++) {
+        pcout << "rotationAxisPoints_LB[" << iSurface << "] = [" << param.rotationAxisPoints_LB[iSurface][0] << ", "
+                                                                 << param.rotationAxisPoints_LB[iSurface][1] << ", "
+                                                                 << param.rotationAxisPoints_LB[iSurface][2] << "]" << std::endl;
+    }
     for (int iSponge = 0; iSponge < 6; iSponge++) {
         pcout << "numSpongeCells[" << iSponge << "] = " << param.numSpongeCells[iSponge] << std::endl;
     }
-    // for (plint iSurface = 0; iSurface < (plint) param.torqueAxisPoints_LB.size(); iSurface++) {
-    //     pcout << "torqueAxisPoints_LB[" << iSurface << "] = [" << param.torqueAxisPoints_LB[iSurface][0] << ", "
-    //                                                            << param.torqueAxisPoints_LB[iSurface][1] << ", "
-    //                                                            << param.torqueAxisPoints_LB[iSurface][2] << "]" << std::endl;
-    // }
+    for (plint iSurface = 0; iSurface < (plint) param.torqueAxisPoints_LB.size(); iSurface++) {
+        pcout << "torqueAxisPoints_LB[" << iSurface << "] = [" << param.torqueAxisPoints_LB[iSurface][0] << ", "
+                                                               << param.torqueAxisPoints_LB[iSurface][1] << ", "
+                                                               << param.torqueAxisPoints_LB[iSurface][2] << "]" << std::endl;
+    }
     pcout << "Re = " << param.inletVelocity[param.flowDirection] * param.characteristicLength / param.nu << std::endl;
     pcout << "omega = " << param.omega << std::endl;
     pcout << "tau = " << 1.0 / param.omega << std::endl;
@@ -760,8 +768,8 @@ void initializeImmersedSurfaceData(SimulationParameters& param)
 {
     std::vector<std::string> allSurfaceFileNames;
     // Later we count on the fact that moving surfaces are included in the global vectors in the beginning.
-    // allSurfaceFileNames.insert(allSurfaceFileNames.end(), param.movingSurfaceFileNames.begin(), param.movingSurfaceFileNames.end());
-    allSurfaceFileNames.insert(allSurfaceFileNames.end(), param.staticSurfaceFileNames.begin(), param.staticSurfaceFileNames.end());
+    allSurfaceFileNames.insert(allSurfaceFileNames.end(), param.movingSurfaceFileNames.begin(), param.movingSurfaceFileNames.end());
+    //allSurfaceFileNames.insert(allSurfaceFileNames.end(), param.staticSurfaceFileNames.begin(), param.staticSurfaceFileNames.end());
 
     param.vertices.resize(0);
     param.areas.resize(0);
@@ -841,26 +849,26 @@ public:
     Array<T,3> operator()(pluint id)
     {
         plint iSurface = -1;
-        // for (plint iMovingSurface = 0; iMovingSurface < param.numMovingSurfaces; iMovingSurface++) {
-        //     plint startId = param.startIds[iMovingSurface];
-        //     plint numVertices = param.allSurfaces[iMovingSurface].getNumVertices();
-        //     if ((plint) id >= startId && (plint) id < startId + numVertices) {
-        //         iSurface = iMovingSurface;
-        //         break;
-        //     }
-        // }
-
-        if (iSurface == -1) {   // We are on a static surface.
-            return Array<T,3>((T) 0, (T) 0, (T) 0);
+        for (plint iMovingSurface = 0; iMovingSurface < param.numMovingSurfaces; iMovingSurface++) {
+            plint startId = param.startIds[iMovingSurface];
+            plint numVertices = param.allSurfaces[iMovingSurface].getNumVertices();
+            if ((plint) id >= startId && (plint) id < startId + numVertices) {
+                iSurface = iMovingSurface;
+                break;
+            }
         }
 
-        // Array<T,3> const& p0 = param.rotationAxisPoints_LB[iSurface];
-        // Array<T,3> const& omegaMax = param.angularVelocities_LB[iSurface];
-        // Array<T,3> const& position = param.vertices[id];
+        //if (iSurface == -1) {   // We are on a static surface.
+            //return Array<T,3>((T) 0, (T) 0, (T) 0);
+        //}
 
-        // Array<T,3> omega = getVelocity(omegaMax, param.nextIter, param.startIter);
+        Array<T,3> const& p0 = param.rotationAxisPoints_LB[iSurface];
+        Array<T,3> const& omegaMax = param.angularVelocities_LB[iSurface];
+        Array<T,3> const& position = param.vertices[id];
 
-        // return(getExactRotationalVelocity(position, omega, p0));
+        Array<T,3> omega = getVelocity(omegaMax, param.nextIter, param.startIter);
+
+        return(getExactRotationalVelocity(position, omega, p0));
     }
 
 private:
@@ -900,85 +908,85 @@ private:
     SimulationParameters& param;
 };
 
-// void updateMovingSurfaces(SimulationParameters& param, plint iIter)
-// {
-//     for (plint iMovingSurface = 0; iMovingSurface < param.numMovingSurfaces; iMovingSurface++) {
-//         Array<T,3> const& n = param.rotationAxisUnitVectors[iMovingSurface];
-//         Array<T,3> const& p0 = param.rotationAxisPoints_LB[iMovingSurface];
-//         Array<T,3> const& omegaMax = param.angularVelocities_LB[iMovingSurface];
-//         Array<T,3> omega = getVelocity(omegaMax, iIter, param.startIter);
+void updateMovingSurfaces(SimulationParameters& param, plint iIter)
+{
+    for (plint iMovingSurface = 0; iMovingSurface < param.numMovingSurfaces; iMovingSurface++) {
+        Array<T,3> const& n = param.rotationAxisUnitVectors[iMovingSurface];
+        Array<T,3> const& p0 = param.rotationAxisPoints_LB[iMovingSurface];
+        Array<T,3> const& omegaMax = param.angularVelocities_LB[iMovingSurface];
+        Array<T,3> omega = getVelocity(omegaMax, iIter, param.startIter);
 
-//         plint numVertices = param.allSurfaces[iMovingSurface].getNumVertices();
-//         plint startId = param.startIds[iMovingSurface];
-//         for (plint iVertex = 0; iVertex < numVertices; iVertex++) {
-//             plint id = iVertex + startId;
-//             Array<T,3>& position = param.vertices[id];
-//             position = getRotatedPosition(position, omega, n, p0);
-//         }
-//     }
-// }
+        plint numVertices = param.allSurfaces[iMovingSurface].getNumVertices();
+        plint startId = param.startIds[iMovingSurface];
+        for (plint iVertex = 0; iVertex < numVertices; iVertex++) {
+            plint id = iVertex + startId;
+            Array<T,3>& position = param.vertices[id];
+            position = getRotatedPosition(position, omega, n, p0);
+        }
+    }
+}
 
-// void outputMovingSurfaces(SimulationParameters& param, std::string baseName, plint iIter)
-// {
-//     plint numDigits = util::val2str(param.numMovingSurfaces).length();
-//     for (plint iMovingSurface = 0; iMovingSurface < param.numMovingSurfaces; iMovingSurface++) {
-//         TriangleSet<T>* triangleSet = param.allSurfaces[iMovingSurface].toTriangleSet(param.precision,
-//                 &param.vertices, param.startIds[iMovingSurface]);
-//         PLB_ASSERT(triangleSet != 0);
-//         triangleSet->scale(param.dx);
-//         triangleSet->translate(param.physicalLocation);
+void outputMovingSurfaces(SimulationParameters& param, std::string baseName, plint iIter)
+{
+    plint numDigits = util::val2str(param.numMovingSurfaces).length();
+    for (plint iMovingSurface = 0; iMovingSurface < param.numMovingSurfaces; iMovingSurface++) {
+        TriangleSet<T>* triangleSet = param.allSurfaces[iMovingSurface].toTriangleSet(param.precision,
+                &param.vertices, param.startIds[iMovingSurface]);
+        PLB_ASSERT(triangleSet != 0);
+        triangleSet->scale(param.dx);
+        triangleSet->translate(param.physicalLocation);
 
-//         std::string fname = createFileName(
-//                 createFileName(baseName + "moving_surface_", iMovingSurface, numDigits+1)+"_", iIter, param.fileNamePadding)
-//             + ".stl";
-//         triangleSet->writeBinarySTL(fname);
+        std::string fname = createFileName(
+                createFileName(baseName + "moving_surface_", iMovingSurface, numDigits+1)+"_", iIter, param.fileNamePadding)
+            + ".stl";
+        triangleSet->writeBinarySTL(fname);
 
-//         delete triangleSet;
-//     }
-// }
+        delete triangleSet;
+    }
+}
 
-// void saveMovingSurfaces(SimulationParameters& param, std::string baseName, plint iIter)
-// {
-//     // Checkpointing of moving surfaces is kept to a very basic level for simplicity.
-//     // We assume that if one process exits, then all the others will exit as well.
-//     if (global::mpi().isMainProcessor()) {
-//         std::string fname = createFileName(baseName + "surfaces_", iIter, param.fileNamePadding) + ".dat";
-//         FILE* fp = fopen(fname.c_str(), "wb");
-//         PLB_ASSERT(fp != 0);
+void saveMovingSurfaces(SimulationParameters& param, std::string baseName, plint iIter)
+{
+    // Checkpointing of moving surfaces is kept to a very basic level for simplicity.
+    // We assume that if one process exits, then all the others will exit as well.
+    if (global::mpi().isMainProcessor()) {
+        std::string fname = createFileName(baseName + "surfaces_", iIter, param.fileNamePadding) + ".dat";
+        FILE* fp = fopen(fname.c_str(), "wb");
+        PLB_ASSERT(fp != 0);
 
-//         plint numVertices = param.vertices.size();
-//         if ((plint) fwrite(&param.vertices[0], sizeof(Array<T,3>), numVertices, fp) != numVertices) {
-//             fclose(fp);
-//             remove(fname.c_str());
-//             std::cout << "Error in saving surface data." << std::endl;
-//             exit(1);
-//         }
-//     }
+        plint numVertices = param.vertices.size();
+        if ((plint) fwrite(&param.vertices[0], sizeof(Array<T,3>), numVertices, fp) != numVertices) {
+            fclose(fp);
+            remove(fname.c_str());
+            std::cout << "Error in saving surface data." << std::endl;
+            exit(1);
+        }
+    }
 
-//     // If all the processes do not exit in the case that one does, then the code
-//     // will deliberately hang here.
-//     global::mpi().barrier();
-// }
+    // If all the processes do not exit in the case that one does, then the code
+    // will deliberately hang here.
+    global::mpi().barrier();
+}
 
-// void readMovingSurfaces(SimulationParameters& param, std::string baseName, plint iIter)
-// {
-//     // Checkpointing of moving surfaces is kept to a very basic level for simplicity.
-//     // We assume that if one process exits, then all the others will exit as well.
-//     // We also assume that all processes can read a file from the filesystem.
-//     std::string fname = createFileName(baseName + "surfaces_", iIter, param.fileNamePadding) + ".dat";
-//     FILE* fp = fopen(fname.c_str(), "rb");
-//     PLB_ASSERT(fp != 0);
+void readMovingSurfaces(SimulationParameters& param, std::string baseName, plint iIter)
+{
+    // Checkpointing of moving surfaces is kept to a very basic level for simplicity.
+    // We assume that if one process exits, then all the others will exit as well.
+    // We also assume that all processes can read a file from the filesystem.
+    std::string fname = createFileName(baseName + "surfaces_", iIter, param.fileNamePadding) + ".dat";
+    FILE* fp = fopen(fname.c_str(), "rb");
+    PLB_ASSERT(fp != 0);
 
-//     plint numVertices = param.vertices.size();
-//     if ((plint) fread(&param.vertices[0], sizeof(Array<T,3>), numVertices, fp) != numVertices) {
-//         std::cout << "Error in loading surface data." << std::endl;
-//         exit(1);
-//     }
+    plint numVertices = param.vertices.size();
+    if ((plint) fread(&param.vertices[0], sizeof(Array<T,3>), numVertices, fp) != numVertices) {
+        std::cout << "Error in loading surface data." << std::endl;
+        exit(1);
+    }
 
-//     // If all the processes do not exit in the case that one or more do, then the code
-//     // will deliberately hang here.
-//     global::mpi().barrier();
-// }
+    // If all the processes do not exit in the case that one or more do, then the code
+    // will deliberately hang here.
+    global::mpi().barrier();
+}
 
 Box3D boundAllSurfaces(SimulationParameters& param)
 {
@@ -1238,7 +1246,7 @@ void initializeSimulation(SimulationParameters& param, bool continueSimulation, 
         pcout << "Reading state of the simulation from file: " << xmlRestartFileName << std::endl;
         loadState(checkpointBlocks, iniIter, param.saveDynamicContent, xmlRestartFileName);
         lattice->resetTime(iniIter);
-        // readMovingSurfaces(param, param.baseFileName, iniIter);
+        readMovingSurfaces(param, param.baseFileName, iniIter);
         pcout << std::endl;
     }
 
@@ -1261,14 +1269,14 @@ void writeVTK(SimulationParameters const& param, MultiBlockLattice3D<T,DESCRIPTO
         std::string fname = createFileName(outDir + "domain_", iIter, param.fileNamePadding);
         VtkImageOutput3D<T> vtkOut(fname, param.dx, param.physicalLocation);
 
-        std::auto_ptr<MultiScalarField3D<T> > p = computeDensity(*lattice, param.outputDomain);
+        std::unique_ptr<MultiScalarField3D<T> > p = computeDensity(*lattice, param.outputDomain);
         vtkOut.writeData<float>(*p, "pressure", pressureScale, pressureOffset);
         p.reset();
 
-        std::auto_ptr<MultiTensorField3D<T,3> > v = computeVelocity(*lattice, param.outputDomain);
+        std::unique_ptr<MultiTensorField3D<T,3> > v = computeVelocity(*lattice, param.outputDomain);
         vtkOut.writeData<float>(*computeNorm(*v), "velocityNorm", param.dx / param.dt);
         vtkOut.writeData<3,float>(*v, "velocity", param.dx / param.dt);
-        std::auto_ptr<MultiTensorField3D<T,3> > vort = computeVorticity(*v);
+        std::unique_ptr<MultiTensorField3D<T,3> > vort = computeVorticity(*v);
         vtkOut.writeData<float>(*computeNorm(*vort), "vorticityNorm", 1.0 / param.dt);
         vtkOut.writeData<3,float>(*vort, "vorticity", 1.0 / param.dt);
     }
@@ -1282,14 +1290,14 @@ void writeVTK(SimulationParameters const& param, MultiBlockLattice3D<T,DESCRIPTO
                     createFileName(outDir + "x_slice_", i, numXdigits+1)+"_", iIter, param.fileNamePadding);
             VtkImageOutput3D<T> vtkOut_x(fname, param.dx, param.physicalLocation);
 
-            std::auto_ptr<MultiScalarField3D<T> > px = computeDensity(*lattice, box_x);
+            std::unique_ptr<MultiScalarField3D<T> > px = computeDensity(*lattice, box_x);
             vtkOut_x.writeData<float>(*px, "pressure", pressureScale, pressureOffset);
             px.reset();
 
-            std::auto_ptr<MultiTensorField3D<T,3> > vx = computeVelocity(*lattice, box_x);
+            std::unique_ptr<MultiTensorField3D<T,3> > vx = computeVelocity(*lattice, box_x);
             vtkOut_x.writeData<float>(*computeNorm(*vx), "velocityNorm", param.dx / param.dt);
             vtkOut_x.writeData<3,float>(*vx, "velocity", param.dx / param.dt);
-            std::auto_ptr<MultiTensorField3D<T,3> > vortx = computeVorticity(*vx);
+            std::unique_ptr<MultiTensorField3D<T,3> > vortx = computeVorticity(*vx);
             vtkOut_x.writeData<float>(*computeNorm(*vortx), "vorticityNorm", 1.0 / param.dt);
             vtkOut_x.writeData<3,float>(*vortx, "vorticity", 1.0 / param.dt);
         }
@@ -1302,14 +1310,14 @@ void writeVTK(SimulationParameters const& param, MultiBlockLattice3D<T,DESCRIPTO
                     createFileName(outDir + "y_slice_", i, numYdigits+1)+"_", iIter, param.fileNamePadding);
             VtkImageOutput3D<T> vtkOut_y(fname, param.dx, param.physicalLocation);
 
-            std::auto_ptr<MultiScalarField3D<T> > py = computeDensity(*lattice, box_y);
+            std::unique_ptr<MultiScalarField3D<T> > py = computeDensity(*lattice, box_y);
             vtkOut_y.writeData<float>(*py, "pressure", pressureScale, pressureOffset);
             py.reset();
 
-            std::auto_ptr<MultiTensorField3D<T,3> > vy = computeVelocity(*lattice, box_y);
+            std::unique_ptr<MultiTensorField3D<T,3> > vy = computeVelocity(*lattice, box_y);
             vtkOut_y.writeData<float>(*computeNorm(*vy), "velocityNorm", param.dx / param.dt);
             vtkOut_y.writeData<3,float>(*vy, "velocity", param.dx / param.dt);
-            std::auto_ptr<MultiTensorField3D<T,3> > vorty = computeVorticity(*vy);
+            std::unique_ptr<MultiTensorField3D<T,3> > vorty = computeVorticity(*vy);
             vtkOut_y.writeData<float>(*computeNorm(*vorty), "vorticityNorm", 1.0 / param.dt);
             vtkOut_y.writeData<3,float>(*vorty, "vorticity", 1.0 / param.dt);
         }
@@ -1322,14 +1330,14 @@ void writeVTK(SimulationParameters const& param, MultiBlockLattice3D<T,DESCRIPTO
                     createFileName(outDir + "z_slice_", i, numZdigits+1)+"_", iIter, param.fileNamePadding);
             VtkImageOutput3D<T> vtkOut_z(fname, param.dx, param.physicalLocation);
 
-            std::auto_ptr<MultiScalarField3D<T> > pz = computeDensity(*lattice, box_z);
+            std::unique_ptr<MultiScalarField3D<T> > pz = computeDensity(*lattice, box_z);
             vtkOut_z.writeData<float>(*pz, "pressure", pressureScale, pressureOffset);
             pz.reset();
 
-            std::auto_ptr<MultiTensorField3D<T,3> > vz = computeVelocity(*lattice, box_z);
+            std::unique_ptr<MultiTensorField3D<T,3> > vz = computeVelocity(*lattice, box_z);
             vtkOut_z.writeData<float>(*computeNorm(*vz), "velocityNorm", param.dx / param.dt);
             vtkOut_z.writeData<3,float>(*vz, "velocity", param.dx / param.dt);
-            std::auto_ptr<MultiTensorField3D<T,3> > vortz = computeVorticity(*vz);
+            std::unique_ptr<MultiTensorField3D<T,3> > vortz = computeVorticity(*vz);
             vtkOut_z.writeData<float>(*computeNorm(*vortz), "vorticityNorm", 1.0 / param.dt);
             vtkOut_z.writeData<3,float>(*vortz, "vorticity", 1.0 / param.dt);
         }
@@ -1435,20 +1443,20 @@ int main(int argc, char* argv[])
         }
     }
 
-    // std::vector<FILE *> fpTorques(param.numMovingSurfaces);
-    // if (global::mpi().isMainProcessor()) {
-    //     plint numDigits = util::val2str(param.numMovingSurfaces).length();
-    //     for (plint iSurface = 0; iSurface < param.numMovingSurfaces; iSurface++) {
-    //         std::string fileName;
-    //         if (param.numMovingSurfaces != 1) {
-    //             fileName = createFileName(outDir + "total_torque_on_surface_", iSurface, numDigits+1) + ".dat";
-    //         } else {
-    //             fileName = outDir + "total_torque_on_surface.dat";
-    //         }
-    //         fpTorques[iSurface] = fopen(fileName.c_str(), continueSimulation ? "a" : "w");
-    //         PLB_ASSERT(fpTorques[iSurface] != 0);
-    //     }
-    // }
+    std::vector<FILE *> fpTorques(param.numMovingSurfaces);
+    if (global::mpi().isMainProcessor()) {
+        plint numDigits = util::val2str(param.numMovingSurfaces).length();
+        for (plint iSurface = 0; iSurface < param.numMovingSurfaces; iSurface++) {
+            std::string fileName;
+            if (param.numMovingSurfaces != 1) {
+                fileName = createFileName(outDir + "axial_torque_on_surface_", iSurface, numDigits+1) + ".dat";
+            } else {
+                fileName = outDir + "axial_torque_on_surface.dat";
+            }
+            fpTorques[iSurface] = fopen(fileName.c_str(), continueSimulation ? "a" : "w");
+            PLB_ASSERT(fpTorques[iSurface] != 0);
+        }
+    }
 
     // Starting iterations.
 
@@ -1503,25 +1511,24 @@ int main(int argc, char* argv[])
 
             // Torques on immersed moving surfaces.
 
-            // T torqueConversion = 2.0 * param.rho * (param.dx * param.dx * param.dx * param.dx * param.dx) / (param.dt * param.dt);
-            // for (plint iSurface = 0; iSurface < param.numMovingSurfaces; iSurface++) {
-            //     Array<T,3> torque = -reduceAxialTorqueImmersed<T>(*container, param.torqueAxisPoints_LB[iSurface],
-            //             param.torqueAxisDirections[iSurface], iSurface) * torqueConversion;
-            //     if (param.numMovingSurfaces != 1) {
-            //         pcout << "Torque on moving surface " << iSurface << ": ";
-            //     } else {
-            //         pcout << "Torque on moving surface: ";
-            //     }
-            //     pcout << "(" << torque[0] << ", " << torque[1] << ", " << torque[2] << ")" << std::endl;
-            //     if (global::mpi().isMainProcessor()) {
-            //         double t = (double) (iIter * param.dt);
-            //         double t0 = (double) torque[0];
-            //         double t1 = (double) torque[1];
-            //         double t2 = (double) torque[2];
-            //         fprintf(fpTorques[iSurface], "% .8e\t% .8e\t% .8e\t% .8e\n", t, t0, t1, t2);
-            //         fflush(fpTorques[iSurface]);
-            //     }
-            // }
+            T torqueConversion = 2.0 * param.rho * (param.dx * param.dx * param.dx * param.dx * param.dx) / (param.dt * param.dt);
+            for (plint iSurface = 0; iSurface < param.numMovingSurfaces; iSurface++) {
+                Array<T,3> torque = -reduceImmersedTorque<T>(*container, param.torqueAxisPoints_LB[iSurface],
+                        iSurface) * torqueConversion;
+                T axialTorque = dot(torque, param.torqueAxisDirections[iSurface]);
+                if (param.numMovingSurfaces != 1) {
+                    pcout << "Axial torque on moving surface " << iSurface << ": ";
+                } else {
+                    pcout << "Axial torque on moving surface: ";
+                }
+                pcout << axialTorque << std::endl;
+                if (global::mpi().isMainProcessor()) {
+                    double t = (double) (iIter * param.dt);
+                    double axialTorque_d = (double) axialTorque;
+                    fprintf(fpTorques[iSurface], "% .8e\t% .8e\n", t, axialTorque_d);
+                    fflush(fpTorques[iSurface]);
+                }
+            }
 
             pcout << "Time for one fluid iteration: " << global::timer("lb-iter").getTime() / (T) param.statIter << std::endl;
             global::timer("lb-iter").reset();
@@ -1531,7 +1538,7 @@ int main(int argc, char* argv[])
         if (iIter % param.outIter == 0 || iIter == param.maxIter - 1) {
             pcout << "Output to disk at iteration: " << iIter << std::endl;
             writeVTK(param, lattice, iIter);
-            // outputMovingSurfaces(param, outDir, iIter);
+            outputMovingSurfaces(param, outDir, iIter);
             pcout << std::endl;
         }
 
@@ -1540,7 +1547,7 @@ int main(int argc, char* argv[])
             pcout << "Saving the state of the simulation at iteration: " << iIter << std::endl;
             saveState(checkpointBlocks, iIter, param.saveDynamicContent, param.xmlContinueFileName,
                     param.baseFileName, param.fileNamePadding);
-            // saveMovingSurfaces(param, param.baseFileName, iIter);
+            saveMovingSurfaces(param, param.baseFileName, iIter);
             pcout << std::endl;
         }
 
@@ -1550,15 +1557,15 @@ int main(int argc, char* argv[])
                     param.saveDynamicContent, param.xmlContinueFileName,
                     param.baseFileName, param.fileNamePadding);
 
-            // if (stopExecution) {
-            //     saveMovingSurfaces(param, param.baseFileName, iIter);
-            //     pcout << "Aborting execution at iteration: " << iIter << std::endl;
-            //     pcout << std::endl;
-            // }
+            if (stopExecution) {
+                saveMovingSurfaces(param, param.baseFileName, iIter);
+                pcout << "Aborting execution at iteration: " << iIter << std::endl;
+                pcout << std::endl;
+            }
         }
 
         // Here we could use either "param.nextIter" or "iIter".
-        // updateMovingSurfaces(param, param.nextIter);
+        updateMovingSurfaces(param, param.nextIter);
 
         global::timer("lb-iter").start();
         lattice->executeInternalProcessors(); // Execute all processors and communicate appropriately.
@@ -1571,9 +1578,9 @@ int main(int argc, char* argv[])
         for (plint iSurface = 0; iSurface < param.numSurfaces; iSurface++) {
             fclose(fpForces[iSurface]);
         }
-        // for (plint iSurface = 0; iSurface < param.numMovingSurfaces; iSurface++) {
-        //     fclose(fpTorques[iSurface]);
-        // }
+        for (plint iSurface = 0; iSurface < param.numMovingSurfaces; iSurface++) {
+            fclose(fpTorques[iSurface]);
+        }
     }
 
     delete container;

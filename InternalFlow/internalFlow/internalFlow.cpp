@@ -1,12 +1,21 @@
 /* This file is part of the Palabos library.
  *
- * Copyright (C) 2011-2017 FlowKit Sarl
- * Route d'Oron 2
- * 1010 Lausanne, Switzerland
- * E-mail contact: contact@flowkit.com
+ * The Palabos softare is developed since 2011 by FlowKit-Numeca Group Sarl
+ * (Switzerland) and the University of Geneva (Switzerland), which jointly
+ * own the IP rights for most of the code base. Since October 2019, the
+ * Palabos project is maintained by the University of Geneva and accepts
+ * source code contributions from the community.
+ * 
+ * Contact:
+ * Jonas Latt
+ * Computer Science Department
+ * University of Geneva
+ * 7 Route de Drize
+ * 1227 Carouge, Switzerland
+ * jonas.latt@unige.ch
  *
- * The most recent release of Palabos can be downloaded at
- * <http://www.palabos.org/>
+ * The most recent release of Palabos can be downloaded at 
+ * <https://palabos.unige.ch/>
  *
  * The library Palabos is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License as
@@ -75,7 +84,7 @@ TriangleSet<T>* triangleSet = 0;
 T currentTime = 0;
 
 // Structure which defines an ``opening''. The surface geometry of the aneurysm,
-//   as given by the user in the form of an STL file, contains holes, which in
+//   as given by the user in the form of an STL file, contains holes, which in 
 //   the specific simulation represent inlets and outlets.
 template<typename T>
 struct Opening {
@@ -198,7 +207,6 @@ void writeImages (
     plint nx = boundaryCondition.getLattice().getNx();
     plint ny = boundaryCondition.getLattice().getNy();
     plint nz = boundaryCondition.getLattice().getNz();
-
     Array<T,3> yz_plane(0.016960, 0.032604, 0.057772);
     Array<T,3> xz_plane(0.026725, 0.017978, 0.057772);
     Array<T,3> xy_plane(0.026725, 0.032604, 0.084113);
@@ -234,42 +242,31 @@ void writeImages (
     writeImages(boundaryCondition, yz_imageDomain, yz_vtkDomain, "yz_"+util::val2str(level), location, dx, dt);
 }
 
+
 template<class BlockLatticeT>
 void writeVTK(BlockLatticeT& lattice,
-              T dx, T dt,
-              plint level)
+    T dx, T dt)
+    //IncomprFlowParam<T> const& parameters, plint iter)
 {
-    //VtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), dx);
-    ParallelVtkImageOutput3D<T> vtkOut(createFileName("vtk", dt, 6), 3, dx);
+    //T dx = parameters.getDeltaX();
+    //T dt = parameters.getDeltaT();
 
+    plint iter = dt;
+    VtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), dx);
+    //ParallelVtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), 3, dx);
+
+    vtkOut.writeData<3, float>(*computeVelocity(lattice), "velocity", dx / dt);
+    vtkOut.writeData<float>(*computeVelocityNorm(lattice), "velocityNorm", dx / dt);
+    //vtkOut.writeData<3, float>(*computeVorticity(*computeVelocity(lattice)), "vorticity", 1. / dt);
     vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
-    vtkOut.writeData<3,float>(*computeVelocity(lattice), "velocity", dx/dt);
-    vtkOut.writeData<float>(*computeVelocityNorm(lattice), "velocityNorm", dx/dt);
-    // vtkOut.writeData<3,float>(*computeVorticity(*computeVelocity(lattice)), "vorticity", 1./dt);
-    // vtkOut.writeData<float>(*computePressure(lattice), "p", util::sqr(dx/dt)*fluidDensity);
-    // vtkOut.writeData<float>(*computeVelocityNorm(lattice), "u", dx/dt);
-}
 
-template<class BlockLatticeT>
-void writeVTK_trans(BlockLatticeT& lattice,
-              T dx, T dt,
-              plint level,
-              plint iter)
-{
-    //VtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), dx);
-    ParallelVtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), 3, dx);
-
-    vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
-    vtkOut.writeData<3,float>(*computeVelocity(lattice), "velocity", dx/dt);
-    vtkOut.writeData<float>(*computeVelocityNorm(lattice), "velocityNorm", dx/dt);
-    //vtkOut.writeData<3,float>(*computeVorticity(*computeVelocity(lattice)), "vorticity", 1./dt);
 }
 
 // This is the function that prepares and performs the actual simulation.
-std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
+std::unique_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
         plint level, MultiBlockLattice3D<T,DESCRIPTOR>* iniVal=0 )
 {
-    plint margin = 3; // Extra margin of allocated cells around the obstacle.
+    plint margin = 3; // Extra margin of allocated cells around the obstacle. 
     plint borderWidth = 1; // Because the Guo boundary condition acts in a one-cell layer.
                            // Requirement: margin>=borderWidth.
 
@@ -304,7 +301,6 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
     pcout << "uLB=" << uAveLB << std::endl;
     pcout << "nuLB=" << nuLB_ << std::endl;
     pcout << "tau=" << 1./omega << std::endl;
-    pcout << "omega=" << omega << std::endl;
     if (performOutput) {
         pcout << "dx=" << dx << std::endl;
         pcout << "dt=" << dt << std::endl;
@@ -353,7 +349,7 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
         dynamics = new BGKdynamics<T,DESCRIPTOR>(omega); // In this model velocity equals momentum
                                                          //   divided by density.
     }
-    std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > lattice
+    std::unique_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > lattice 
         = generateMultiBlockLattice<T,DESCRIPTOR> (
                 voxelizedDomain.getVoxelMatrix(), envelopeWidth, dynamics );
     lattice->toggleInternalStatistics(false);
@@ -412,9 +408,6 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
             pcout << "T= " << currentTime << "; "
                   << "Average energy: "
                   << boundaryCondition.computeAverageEnergy()*util::sqr(dx/dt) << std::endl;
-                  // Add
-                  // writeVTK_trans(*lattice, dx, dt, level, i);
-                  // -----
         }
         if (i%convergenceIter==0) {
             velocityTracer.takeValue(computeAverageEnergy(*lattice));
@@ -454,9 +447,7 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
                 *computeSurfaceForce( boundary, voxelizedDomain, *lattice, model->velIsJ(), dynamicMesh ),
                 scalarNames, vectorNames, "surface_"+util::val2str(level)+".vtk", dynamicMesh, 0,
                 scalarFactor, vectorFactor );
-        // Add
-        writeVTK(*lattice, dx, dt, level);
-        // -----
+        writeVTK(*lattice, dx, dt);
     }
 
     T averageEnergy = boundaryCondition.computeAverageEnergy()*util::sqr(dx/dt);
@@ -568,7 +559,7 @@ int main(int argc, char* argv[])
         global::argv(1).read(paramXmlFileName);
     }
     catch (PlbIOException& exception) {
-        pcout << "Wrong parameters; the syntax is: "
+        pcout << "Wrong parameters; the syntax is: " 
               << (std::string)global::argv(0) << " parameter-input-file.xml" << std::endl;
         return -1;
     }
@@ -586,7 +577,7 @@ int main(int argc, char* argv[])
 
     global::timer("global").start();
     plint iniLevel=0;
-    std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > iniConditionLattice(0);
+    std::unique_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > iniConditionLattice(nullptr);
     // This code incorporates the concept of smooth grid refinement until convergence is
     //   achieved. The word ``smooth'' indicates that as the refinement level increases
     //   by one, the whole grid doubles in each direction. When the grid is refined, both
@@ -596,7 +587,7 @@ int main(int argc, char* argv[])
     try {
         for (plint level=iniLevel; level<=maxLevel; ++level) {
             pcout << std::endl << "Running new simulation at level " << level << std::endl;
-            std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > convergedLattice (
+            std::unique_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > convergedLattice (
                     run(level, iniConditionLattice.get()) );
             if (level != maxLevel) {
                 plint dxScale = -1;
@@ -607,10 +598,9 @@ int main(int argc, char* argv[])
                 // The converged simulation of the previous grid level is used as the initial condition
                 //   for the simulation at the next grid level (after appropriate interpolation has
                 //   taken place).
-                iniConditionLattice = std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > (
+                iniConditionLattice = std::unique_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > (
                         refine(*convergedLattice, dxScale, dtScale, new BGKdynamics<T,DESCRIPTOR>(1.)) );
             }
-
         }
     }
     catch(PlbException& exception) {
@@ -618,3 +608,4 @@ int main(int argc, char* argv[])
         return -1;
     }
 }
+
